@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "site/index.html"
+        ],
+        "createdAt": "2026-10-06T13:52:05.635Z",
+        "reason": "Detector reports light backgrounds absent from the dark-theme source and no source line; actual body background and explicit selection colors are defined in site/styles.css."
+      }
+    ]
+  }
+}

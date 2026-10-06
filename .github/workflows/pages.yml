@@ -1,0 +1,54 @@
+name: Publish public site
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Validate only or publish site/
+        required: true
+        default: validate-only
+        type: choice
+        options:
+          - validate-only
+          - deploy
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+      - name: Verify public artifact boundary
+        run: |
+          test -f site/index.html
+          test -f site/styles.css
+          if find site -type f \( -name '*.json' -o -name '*.env' -o -name '*.pem' -o -name '*.key' \) -print -quit | grep -q .; then
+            echo "Private or secret-like public artifact rejected"
+            exit 1
+          fi
+
+  deploy:
+    needs: validate
+    if: ${{ inputs.mode == 'deploy' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
+      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
